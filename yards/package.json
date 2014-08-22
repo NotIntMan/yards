@@ -1,0 +1,18 @@
+{
+    "name": "yards",
+    "version": "0.1.0",
+    "description": "Yet another rapid development solution",
+    "bugs": "shepardiwe@gmail.com",
+    "license": "MIT",
+    "author": {
+        "name": "Dmirty Dyomin",
+        "email": "shepardiwe@gmail.com",
+        "url": "https://nim-pro.github.io/"
+    },
+    "dependencies": {
+        "coffee-script":"1.7.1",
+        "js2coffee":"0.3.1",
+        "promise":"5.0.0"
+    },
+    "main": "yards.js"
+}
