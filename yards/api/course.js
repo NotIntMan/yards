@@ -54,16 +54,21 @@ Course.prototype.run=function(fn) {
                 this.status=this.STATUSES.BUSY;
             else
                 return;
-            var f=this.course.splice(0,1)[0];
+            var f=this.course[0];
             var self=this;
-            f(function() {
+            var nextFn=function() {
                 if (self.isActive&&self.isBusy)
                     if (self.course.length>0) {
                         self.status=self.STATUSES.READY;
                         self.run();
                     } else
                         self.status=self.STATUSES.READY;
-            });
+            };
+            var okFn=function() {
+                self.course.splice(0,1);
+                nextFn();
+            };
+            f(okFn,nextFn);
         } else 
             self.status=self.STATUSES.READY;
     };
