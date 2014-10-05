@@ -10,7 +10,7 @@ Dir.prototype.read=function(callBack) {
     this.course.run(function(cb) {
         if (self.$fileExists)
             fs.readdir(self.$filename,function(err,data) {
-                if (err) throw err;
+                if (err) self.throw(err);
                 self.data=self.decode(data);
                 if ((callBack||false).constructor===Function)
                     callBack(self.data);

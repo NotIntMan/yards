@@ -55,7 +55,7 @@ Package.prototype.writeObj=function(path,obj,callBack) {
                 fs.mkdir(path,next);
             else
                 fs.lstat(path,function(err,stat) {
-                    if (err) throw err;
+                    if (err) self.throw(err);
                     if (stat.isFile()||stat.isSymbolicLink())
                         fs.unlink(path,function() {
                             fs.mkdir(path,next);
@@ -73,7 +73,7 @@ Package.prototype.writeObj=function(path,obj,callBack) {
             else
                 prs.push(new Promise(function(next) {
                     fs.writeFile(path+'/'+i,obj[i],function(err) {
-                        if (err) throw err;
+                        if (err) self.throw(err);
                         next();
                     });
                 }));

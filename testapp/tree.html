@@ -1,0 +1,22 @@
+<link rel="import" href="btn.html"/>
+<polymer-element name="tree-x" attributes="data">
+    <template>
+        <button-x text="{{data}}"></button-x>
+        <template repeat="{{name in dataArr}}">
+            <button-x text="{{name}}"></button-x>
+        </template>
+    </template>
+    <script>
+        Polymer({
+            data:'[]',
+            ready:function() {
+                this.dataArr=JSON.parse(this.data);
+            },
+            filterData:function(dataArr) {
+                return (dataArr||[]).filter(function(a) {
+                    return a<=5;
+                });
+            }
+        });
+    </script>
+</polymer-element>

@@ -1,0 +1,20 @@
+{
+    "name": "yards-cli",
+    "version": "0.1.0",
+    "description": "Command-line interface for yet another rapid development solution",
+    "bugs": "shepardiwe@gmail.com",
+    "homepage": "https://nim-pro.github.io/",
+    "license": "MIT",
+    "author": {
+        "name": "Dmirty Dyomin",
+        "email": "shepardiwe@gmail.com",
+        "url": "https://nim-pro.github.io/"
+    },
+    "dependencies": {
+        "commander": "2.3.0"
+    },
+    "bin": {
+        "yards": "./yards.js"
+    },
+    "main": "yards-cli.js"
+}

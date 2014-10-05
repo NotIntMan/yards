@@ -1,0 +1,8 @@
+{
+    "name":"polymer app",
+    "version":"0.0.1",
+    "main":"app://app/index.html",
+    "window": {
+        "toolbar": false
+    }
+}
