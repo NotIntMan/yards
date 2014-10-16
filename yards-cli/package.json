@@ -11,7 +11,8 @@
         "url": "https://nim-pro.github.io/"
     },
     "dependencies": {
-        "commander": "2.3.0"
+        "commander": "2.3.0",
+        "yards": "0.1.0"
     },
     "bin": {
         "yards": "./yards.js"

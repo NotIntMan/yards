@@ -47,7 +47,33 @@ var build=program
             plist:build.plist
         }).then(function() {
             console.log('Building complete!');
-        })
+        });
+    });
+
+var newTemplate=program
+    .command('template [<path>]')
+    .description('Packing new application template.')
+    .option('-o, --output <filename>','Sets output filename.')
+    .action(function(path) {
+        cli.newTemplate({
+            path:path,
+            outputFile:newTemplate.output
+        },function() {
+            console.log('Template is packed.')
+        });
+    });
+
+var newProject=program
+    .command('project [<path>]')
+    .description('Creating new project.')
+    .option('-t, --template <filename>','Use default or custom template.')
+    .action(function(path) {
+        cli.newProject({
+            path:path,
+            template:newProject.template
+        },function() {
+            console.log('Project is created.')
+        });
     });
 
 program.parse(process.argv);
