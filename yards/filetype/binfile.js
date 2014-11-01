@@ -1,5 +1,6 @@
 var Class=require('../api/classes.js');
 var File=require('../api/filetype.js');
+var Promise=require('../api/promise-mixin.js');
 
 var Binary=Class(function() {
     this.$types=[];
@@ -38,7 +39,7 @@ var dataToNum=function(data) {
     return res;
 };
 
-Binary.prototype.encode=function(data) {
+Binary.prototype._encode=function(data) {
     var info={
         isSimple:true,
         typeCode:0
@@ -57,7 +58,7 @@ Binary.prototype.encode=function(data) {
                     map=map.concat(l);
                     var dataArr=[];
                     for (var i=0; i<data.length; i++) {
-                        var e=this.encode(data[i]);
+                        var e=this._encode(data[i]);
                         var l=numToData(e.length);
                         map.push(l.length);
                         map=map.concat(l);
@@ -69,7 +70,7 @@ Binary.prototype.encode=function(data) {
                     check:
                     for (var i=0; i<this.$types.length; i++)
                         if (data instanceof this.$types[i].class||data.constructor===this.$types[i].class) {
-                            data=this.encode(this.$types[i].encoder(data));
+                            data=this._encode(this.$types[i].encoder(data));
                             info.isSimple=false;
                             info.typeCode=i;
                             break check;
@@ -80,12 +81,12 @@ Binary.prototype.encode=function(data) {
                         var count=0;
                         for (var i in data) {
                             count++;
-                            var name=this.encode(i);
+                            var name=this._encode(i);
                             var l=numToData(name.length);
                             mapArr.push(l.length);
                             mapArr=mapArr.concat(l);
                             dataArr.push(name);
-                            var obj=this.encode(data[i]);
+                            var obj=this._encode(data[i]);
                             var l=numToData(obj.length);
                             mapArr.push(l.length);
                             mapArr=mapArr.concat(l);
@@ -161,6 +162,13 @@ Binary.prototype.encode=function(data) {
     return Buffer.concat([new Buffer(code.concat(map)),data]);
 };
 
+Binary.prototype.encode=function(data) {
+    var self=this;
+    return new Promise(function(a) {
+        a(self._encode(data));
+    });
+};
+
 var readData=function(buf,pos,len) {
     var out=[];
     for (var i=0; i<len; i++)
@@ -168,12 +176,12 @@ var readData=function(buf,pos,len) {
     return out;
 };
 
-Binary.prototype.decode=function(data,pos) {
+Binary.prototype._decode=function(data,pos) {
     if (!Buffer.isBuffer(data))
         return data;
     pos=pos||0;
     if (data[pos]<128) {
-        return this.$types[data[pos]].decoder(this.decode(data,pos+1));
+        return this.$types[data[pos]].decoder(this._decode(data,pos+1));
     } else {
         var typeCode=data[pos]-128;
         switch(typeCode) {
@@ -236,7 +244,7 @@ Binary.prototype.decode=function(data,pos) {
                 for (var i=0; i<l; i++) {
                     var d=readData(data,position,lens[i]);
                     position+=lens[i];
-                    res.push(this.decode(new Buffer(d)));
+                    res.push(this._decode(new Buffer(d)));
                 };
                 return res;
             break;
@@ -257,14 +265,21 @@ Binary.prototype.decode=function(data,pos) {
                     position+=lens[i];
                     var obj=readData(data,position,lens[i+1]);
                     position+=lens[i+1];
-                    name=this.decode(new Buffer(name));
-                    obj=this.decode(new Buffer(obj));
+                    name=this._decode(new Buffer(name));
+                    obj=this._decode(new Buffer(obj));
                     res[name]=obj;
                 };
                 return res;
             break;
         };
     };
+};
+
+Binary.prototype.decode=function(data) {
+    var self=this;
+    return new Promise(function(a) {
+        a(self._decode(data));
+    });
 };
 
 module.exports=Binary;

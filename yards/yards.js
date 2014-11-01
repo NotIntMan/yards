@@ -4,7 +4,9 @@ var yards={
         Sync:require('./api/sync.js'),
         File:require('./api/filetype.js'),
         Course:require('./api/course.js'),
-        Module:require('./api/module.js')
+        PromiseCourse:require('./api/promise-course.js'),
+        Module:require('./api/module.js'),
+        PromiseMixin:require('./api/promise-mixin.js')
     },
     FileType:{
         JavaScript:require('./filetype/javascript.js'),
@@ -16,8 +18,7 @@ var yards={
     },
     Libs:{
         CoffeeScript:require('coffee-script'),
-        JS2Coffee:require('js2coffee'),
-        Promise:require('promise')
+        JS2Coffee:require('js2coffee')
     }
 };
 

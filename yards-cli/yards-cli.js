@@ -1,5 +1,12 @@
 var Builder=require('./node-webkit-builder');
 var path=require('path');
+var yards=require('yards');
+var Promise=yards.API.PromiseMixin;
+var template=require('./template.js');
+var fs=require('fs');
+var nodewebkit=require('nodewebkit');
+var ChildProcess=require('child_process');
+
 
 var _asIs=function(name,val,opts) {opts[name]=val};
 var o=function(def,decode) {
@@ -71,9 +78,6 @@ module.exports.build=function(options,callBack) {
         return builder.build();
 };
 
-var template=require('./template.js');
-var fs=require('fs');
-
 var _projOptions={
     path:o('./',function(name,val,opts) {
         opts.path=path.resolve(val);
@@ -81,7 +85,7 @@ var _projOptions={
     template:o('')
 };
 
-module.exports.newProject=function(options,callBack) {
+module.exports.newProject=function(options) {
     var opts={};
     for (var i in _projOptions) {
         var val;
@@ -93,35 +97,27 @@ module.exports.newProject=function(options,callBack) {
     };
     var y=new template('');
     y.readFromDir(path.resolve(__dirname,'node_modules','yards'));
-    fs.mkdir(path.resolve(opts.path),function() {
-        fs.mkdir(path.resolve(opts.path,'node_modules'),function() {
-            y.writeToDir(path.resolve(opts.path,'node_modules','yards'),function() {
-                var x=new template(opts.template);
-                x.fileExists(function(exists) {
-                    if (exists) {
-                        x.read({});
-                        x.writeToDir(opts.path,function() {
-                            if ((callBack||false).constructor===Function)
-                                callBack();
-                        });
-                    } else {
-                        var t=new template(path.resolve(__dirname,'templates',opts.template+'.bin'));
-                        t.fileExists(function(exists) {
-                            if (exists) {
-                                t.read({});
-                                t.writeToDir(opts.path,function() {
-                                    if ((callBack||false).constructor===Function)
-                                        callBack();
-                                });
-                            } else {
-                                if ((callBack||false).constructor===Function)
-                                    callBack();
-                            };
-                        });
-                    }
-                });
-            });
+    var mkdir=Promise.denodeify(fs.mkdir);
+    return mkdir(path.resolve(opts.path)).then(function() {
+        return mkdir(path.resolve(opts.path,'node_modules'));
+    }).then(null,function(){}).then(function() {
+        return y.writeToDir(path.resolve(opts.path,'node_modules','yards'));
+    }).then(function() {
+        var arr=[
+            opts.template,
+            path.resolve(__dirname,'templates',opts.template+'.bin')
+        ].map(function(p) {
+            var t=new template(p);
+            return t.promise();
         });
+        return Promise.all(arr);
+    }).then(function(arr) {
+        for (var i=0; i<arr.length; i++)
+            if (arr[i].$fileExists) {
+                console.log('Using template',path.relative(path.resolve(arr[i].filename,'..'),arr[i].filename));
+                arr[i].read();
+                return arr[i].writeToDir(opts.path);
+            };
     });
 };
 
@@ -134,7 +130,7 @@ var _templateOptions={
     })
 };
 
-module.exports.newTemplate=function(options,callBack) {
+module.exports.newTemplate=function(options) {
     var opts={};
     for (var i in _templateOptions) {
         var val;
@@ -145,10 +141,13 @@ module.exports.newTemplate=function(options,callBack) {
         _templateOptions[i].decode(i,val,opts);
     };
     var t=new template(opts.outputFile);
-    t.readFromDir(opts.path,function() {
-        t.write({},function() {
-            if ((callBack||false).constructor===Function)
-                callBack();
-        });
+    return t.readFromDir(opts.path).then(function() {
+        return t.write();
     });
+};
+
+module.exports.run=function(p) {
+    var exebin=nodewebkit.findpath();
+    var exec=Promise.denodeify(ChildProcess.exec);
+    return exec(exebin+' "'+path.resolve(p)+'"');
 };

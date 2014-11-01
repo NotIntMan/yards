@@ -4,24 +4,40 @@ var path=require('path');
 
 var JavaScript=Class(function(){},FileType);
 
-JavaScript.prototype.eval=function(w,callBack) {
+JavaScript.prototype.eval=function(parent) {
     var self=this;
-    this.course.run(function(cb) {
+    return this.course.run(function(cb,errCb) {
         var filename=(self.$realPath!==null?self.$realPath:self.filename);
         var res;
+        var m=new module.constructor(filename,parent);
+        m.filename=filename;
         try {
             //eval('(function (__filename, __dirname) {'+self.data+"\n});").call(w,filename,path.resolve(filename,'..'));
-            var m=new module.constructor(filename,module);
-            m.load(filename);
-            res=m.exports;
+            var paths=[path.resolve(filename,'..')];
+            var doIt=true;
+            while(doIt) {
+                var lastPath=paths.slice(-1)[0];
+                var _path=path.resolve(lastPath,'..');
+                if (lastPath!==_path)
+                    paths.push(_path);
+                else
+                    doIt=false;
+            };
+            m.paths=paths.map(function(p) {
+                return path.resolve(p,'node_modules');
+            });
         } catch(e) {
-            self.throw(e);
+            errCb(e);
         };
-        if ((callBack||false).constructor===Function)
-            callBack(res);
-        cb();
+        cb(m);
+    }).next(function(m,cb) {
+        try {
+            m._compile(self.data,m.filename);
+        } catch(e) {
+            cb(e);
+        };
+        cb(null,m.exports);
     });
-    return this;
 };
 
 module.exports=JavaScript;

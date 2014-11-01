@@ -24,22 +24,21 @@ var NodePackage=Class(function(){
 },Package);
 
 var y=new NodePackage('yards.package');
-y.fileExists(function(exists) {
+y.promise().then(function() {
+    var exists=y.$fileExists;
     console.log('Exists:',exists);
     if (exists) {
-        y.read({},function() {
+        y.read().then(function() {
             console.log('File readed');
-            y.writeToDir('../yards2',function() {
+            y.writeToDir('../yards2').then(function() {
                 console.log('Dir writed');
-                console.log(y.data);
             });
         });
     } else {
-        y.readFromDir('../yards',function(data) {
+        y.readFromDir('../yards').then(function(data) {
             console.log('Dir readed');
-            y.write({},function() {
+            y.write().then(function() {
                 console.log('File writed');
-                console.log(y.data);
             });
         });
     };

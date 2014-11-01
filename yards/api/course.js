@@ -1,10 +1,12 @@
 var Class=require('./classes.js');
-var Sync=require('./sync.js');
 
 var Course=Class(function() {
     this.course=[];
     this.status=this.STATUSES.READY;
+    this.currentRunCount=0;
 });
+
+Course.prototype.maxRunCount=3;
 
 Course.prototype.STATUSES={
     UNACTIVE:0,
@@ -35,19 +37,6 @@ Course.prototype.run=function(fn) {
                 this.run(fn[i]);
         break;
     };
-/*If somethink will wrong this code work correctly, but requires harmony-generators
-    if (this.isActive&&this.isReady&&this.course.length>0) {
-        var self=this;
-        Sync(function*(cb) {
-            self.status=self.STATUSES.BUSY;
-            while (self.course.length>0) {
-                var f=self.course.splice(0,1)[0];
-                yield f(cb);
-            };
-            if (self.isActive&&self.isBusy)
-                self.status=self.STATUSES.READY;
-        });
-    };*/
     if (this.isActive) {
         if (this.course.length>0) {
             if (this.isReady)
@@ -65,10 +54,17 @@ Course.prototype.run=function(fn) {
                         self.status=self.STATUSES.READY;
             };
             var okFn=function() {
+                self.currentRunCount=0;
                 self.course.splice(0,1);
                 nextFn();
             };
-            f(okFn,nextFn);
+            var errFn=function() {
+                if (self.currentRunCount>=self.maxRunCount-1)
+                    okFn();
+                else
+                    setTimeout(nextFn,(self.currentRunCount+=1)*1000);
+            };
+            f(okFn,errFn);
         } else 
             self.status=self.STATUSES.READY;
     };

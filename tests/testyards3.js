@@ -1,14 +1,12 @@
 var yards=require('../yards');
+var CoffeeScript=yards.FileType.CoffeeScript;
 
-var File=yards.API.File;
-var Sync=yards.API.Sync;
-var JS=yards.FileType.JavaScript;
-
-var g=Sync.fn(function*(cb,filename) {
-    var f=new JS(filename);
-    yield f.read('utf-8',cb);
-    var res=yield f.eval(module,cb);
-    console.log(res[0]);
+var f=new CoffeeScript('./test.coffee');
+f.read('utf-8').then(function() {
+    return f.eval(module);
+}).then(function(res) {
+    console.log('Script result:',res);
+},function(err) {
+    console.log(err.stack);
 });
-
-g('1/testyards1.js');
+//require('./test.coffee');

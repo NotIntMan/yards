@@ -3,7 +3,7 @@ var yards=require('../yards');
 var Binary=yards.FileType.BinFile;
 
 var b=new Binary('file.bin');
-b.read({},console.log);
+b.read().then(console.log);
 b.course.run(function(cb) {
     b.data={
         object:{
@@ -23,4 +23,4 @@ b.course.run(function(cb) {
     };
     cb();
 });
-b.write(console.log);
+b.write();

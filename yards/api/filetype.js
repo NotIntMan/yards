@@ -1,5 +1,6 @@
 var Class=require('./classes.js');
-var Course=require('./course.js');
+var Course=require('./promise-course.js');
+var Promise=require('./promise-mixin.js');
 var fs=require('fs');
 
 var FileType=Class(function(filename) {
@@ -20,133 +21,102 @@ FileType.prototype.__defineSetter__('filename',function(v) {
     return this.$filename;
 });
 
-FileType.prototype.fileExists=function(callBack) {
+FileType.prototype.promise=function() {
     var self=this;
-    this.course.run(function(cb) {
+    return this.course.next().then(function() {
+        return self;
+    });
+};
+
+FileType.prototype.fileExists=function() {
+    var self=this;
+    return this.course.run(function(cb) {
         fs.exists(self.$filename,function(res) {
-            self.$fileExists=res;
-            if ((callBack||false).constructor===Function)
-                callBack(res);
-            cb();
+            cb(self.$fileExists=res);
         });
     });
-    return this;
 };
 
 FileType.prototype.encode=function(data) {
-    return data;
+    return new Promise(function(a) {
+        a(data);
+    });
 };
 
 FileType.prototype.decode=function(data) {
-    return data;
-};
-
-FileType.prototype.read=function(options,callBack) {
-    var self=this;
-    this.course.run(function(cb) {
-        if (self.$fileExists) {
-            fs.readFile(self.$filename,options,function(err,data) {
-                if (err) self.throw(err);
-                self.data=self.decode(data);
-                if ((callBack||false).constructor===Function)
-                    callBack(self.data);
-                cb();
-            });
-        } else {
-            if ((callBack||false).constructor===Function)
-                callBack();
-            cb();
-        };
+    return new Promise(function(a) {
+        a(data);
     });
-    return this;
 };
 
-FileType.prototype.write=function(options,callBack) {
+FileType.prototype.read=function(options) {
     var self=this;
-    this.course.run(function(cb) {
-        fs.writeFile(self.$filename,self.encode(self.data),options,function(err) {
-            if (err) self.throw(err);
-            if ((callBack||false).constructor===Function)
-                callBack();
-            cb();
+    return this.course.run(function(cb,errCb) {
+        fs.readFile(self.$filename,options,function(err,data) {
+            if (err) return errCb(err);
+            self.decode(data).then(function(res) {
+                cb(self.data=res);
+            },function(err) {
+                errCb(err);
+            });
         });
     });
-    return this;
 };
 
-FileType.prototype.realPath=function(callBack) {
+FileType.prototype.write=function(options) {
     var self=this;
-    this.course.run(function(cb) {
-        if (self.$fileExists)
-            fs.realpath(self.$filename,function(err, resolvedPath) {
-                if (err) self.throw(err);
-                self.$realPath=resolvedPath;
-                if ((callBack||false).constructor===Function)
-                    callBack(resolvedPath);
+    return this.course.run(function(cb,errCb) {
+        self.encode(self.data).then(function(data) {
+            fs.writeFile(self.$filename,data,options,function(err) {
+                if (err) return errCb(err);
                 cb();
             });
-        else {
-            if ((callBack||false).constructor===Function)
-                callBack(false);
-            cb();
-        };
+        });
     });
-    return this;
 };
 
-FileType.prototype.rename=function(newPath,callBack) {
+FileType.prototype.realPath=function() {
     var self=this;
-    this.course.run(function(cb) {
+    return this.course.run(function(cb,errCb) {
+        if (self.$fileExists)
+            fs.realpath(self.$filename,function(err, resolvedPath) {
+                if (err) return errCb(err);
+                self.$realPath=resolvedPath;
+                cb(resolvedPath);
+            });
+        else {
+            cb(false);
+        };
+    });
+};
+
+FileType.prototype.rename=function(newPath) {
+    var self=this;
+    return this.course.run(function(cb,errCb) {
         if (self.$fileExists)
             fs.rename(self.$filename,newPath,function() {
                 self.filename=newPath;
-                self.course.run(function(xb) {
-                    self.$filename=self.$realPath;
-                    if ((callBack||false).constructor===Function)
-                        callBack(self.$fileExists);
-                    xb();
+                fs.realpath(self.$filename,function(err, resolvedPath) {
+                    if (err) return errCb(err);
+                    cb(self.$filename=self.$realPath=resolvedPath);
                 });
-                cb();
             });
         else {
-            if ((callBack||false).constructor===Function)
-                callBack(false);
-            cb();
+            cb(false);
         };
     });
-    return this;
 };
 
-FileType.prototype.unlink=function(callBack) {
+FileType.prototype.unlink=function() {
     var self=this;
-    this.course.run(function(cb) {
-        if (self.$fileExists)
-            fs.unlink(self.$filename,function() {
-                fs.exists(self.$filename,function(res) {
-                    self.$fileExists=res;
-                    if ((callBack||false).constructor===Function)
-                        callBack(!res);
-                    cb();
-                });
+    return this.course.run(function(cb) {
+        fs.unlink(self.$filename,function() {
+            fs.exists(self.$filename,function(res) {
+                self.$fileExists=res;
+                cb(!res);
             });
-        else {
-            if ((callBack||false).constructor===Function)
-                callBack(true);
-            cb();
-        };
+        });
     });
-    return this;
-};
-
-FileType.prototype.throw=function(e) {
-    if (e!=null) {
-        e.message='('+(this.$realPath!==null?this.$realPath:this.filename)+'): '+e.message;
-        throw e;
-    };
-};
-
-FileType.prototype.catch=function(fn) {
-    this.throw=fn;
 };
 
 module.exports=FileType;

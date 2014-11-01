@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var program=require('commander');
 var manifest=require('./package.json');
 var cli=require('./yards-cli.js');
@@ -58,7 +60,7 @@ var newTemplate=program
         cli.newTemplate({
             path:path,
             outputFile:newTemplate.output
-        },function() {
+        }).then(function() {
             console.log('Template is packed.')
         });
     });
@@ -71,8 +73,18 @@ var newProject=program
         cli.newProject({
             path:path,
             template:newProject.template
-        },function() {
+        }).then(function() {
             console.log('Project is created.')
+        });
+    });
+
+var run=program
+    .command('run [<path>]')
+    .description('Running existing project.')
+    .action(function(path) {
+        console.log('Running project as application...');
+        cli.run(path).then(function() {
+            console.log('Application closed.')
         });
     });
 
