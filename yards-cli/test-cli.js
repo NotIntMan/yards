@@ -1,1 +1,0 @@
-var cli=require('./yards-cli.js');

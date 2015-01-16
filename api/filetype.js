@@ -56,9 +56,7 @@ FileType.prototype.read=function(options) {
             if (err) return errCb(err);
             self.decode(data).then(function(res) {
                 cb(self.data=res);
-            },function(err) {
-                errCb(err);
-            });
+            },errCb);
         });
     });
 };
@@ -71,7 +69,7 @@ FileType.prototype.write=function(options) {
                 if (err) return errCb(err);
                 cb();
             });
-        });
+        },errCb);
     });
 };
 

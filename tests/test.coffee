@@ -1,6 +1,8 @@
-i=0
-module.paths.forEach (p)=>
-    console.log(p)
-    i++
+yards=require '../yards'
+BinFile=yards.FileType.BinFile
 
-module.exports=i
+module.exports=new Promise (a)=>
+    new BinFile('file.bin')
+        .read()
+        .then (r)=>
+            a(module.exports=r)

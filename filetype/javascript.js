@@ -1,13 +1,28 @@
 var Class=require('../api/classes.js');
 var FileType=require('../api/filetype.js');
 var path=require('path');
+var Promise=require('../api/promise-mixin.js');
 
-var JavaScript=Class(function(){},FileType);
+var JavaScript=Class(function(){
+    this.$module=null;
+},FileType);
+
+JavaScript.prototype.read=function() {
+    var filename=(this.$realPath!==null?this.$realPath:this.filename);
+    if (!!module.constructor._cache[filename])
+        return Promise.resolve('');
+    else
+        return FileType.prototype.read.apply(this,arguments);
+};
 
 JavaScript.prototype.eval=function(parent) {
     var self=this;
     return this.course.run(function(cb,errCb) {
         var filename=(self.$realPath!==null?self.$realPath:self.filename);
+        if (!!module.constructor._cache[filename]) {
+            self.$module=module.constructor._cache[filename];
+            return cb(module.constructor._cache[filename].exports);
+        };
         var res;
         var m=new module.constructor(filename,parent);
         m.filename=filename;
@@ -29,14 +44,13 @@ JavaScript.prototype.eval=function(parent) {
         } catch(e) {
             errCb(e);
         };
-        cb(m);
-    }).next(function(m,cb) {
         try {
             m._compile(self.data,m.filename);
         } catch(e) {
-            cb(e);
+            errCb(e);
         };
-        cb(null,m.exports);
+        module.constructor._cache[m.filename]=self.$module=m;
+        cb(m.exports);
     });
 };
 

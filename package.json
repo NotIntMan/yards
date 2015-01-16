@@ -11,7 +11,7 @@
         "url": "https://nim-pro.github.io/"
     },
     "dependencies": {
-        "coffee-script":"1.7.1",
+        "coffee-script":"1.8.0",
         "js2coffee":"0.3.1",
         "promise":"5.0.0"
     },
