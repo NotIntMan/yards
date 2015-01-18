@@ -6,29 +6,24 @@ function Sync(fn,args) {
         var result;
         var callBack;
         callBack=function() {
-            var args;
-            if (result&&result.value&&((result.value.then||false).constructor===Function))
-                args=arguments[0];
-            else
-                args=Array.prototype.slice.call(arguments,0);
+            var args=arguments[0];
             try {
                 result=gen.next(args);
             } catch(e) {
                 reject(e);
             }
             if (!result.done) {
-                if (((result.value.then||false).constructor===Function)) {
+                if (result.value&&((result.value.then||false).constructor===Function)) {
                     result.value.then(function(res) {
                         callBack(res);
                     },function(err) {
                         reject(err);
                     });
-                };
+                } else reject(new Error("YIELD called with not THENable object.\nUse Promise.resolve() for functions with unknown result."));
             } else
                 success(result.value);
         };
-        var f=fn.bind(null,callBack);
-        gen=f.apply(null,args);
+        gen=fn.apply(this,args);
         callBack();
     });
 };

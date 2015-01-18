@@ -35,22 +35,11 @@ var yards={
         get Dir() {
             return require('./filetype/dir.js')
         },
-        get CoffeeScript() {
-            return require('./filetype/coffeescript.js')
-        },
         get BinFile() {
             return require('./filetype/binfile.js')
         },
         get Package() {
             return require('./filetype/package.js')
-        }
-    },
-    Libs:{
-        get CoffeeScript() {
-            return require('coffee-script')
-        },
-        get JS2Coffee() {
-            return require('js2coffee')
         }
     }
 };
