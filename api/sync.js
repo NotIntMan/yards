@@ -13,13 +13,11 @@ function Sync(fn,args) {
                 reject(e);
             }
             if (!result.done) {
-                if (result.value&&((result.value.then||false).constructor===Function)) {
-                    result.value.then(function(res) {
-                        callBack(res);
-                    },function(err) {
-                        reject(err);
-                    });
-                } else reject(new Error("YIELD called with not THENable object.\nUse Promise.resolve() for functions with unknown result."));
+                Promise.resolve(result.value).then(function(res) {
+                    callBack(res);
+                },function(err) {
+                    reject(err);
+                });
             } else
                 success(result.value);
         };
